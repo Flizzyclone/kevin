@@ -22,8 +22,8 @@ const suggestions = require('./suggestions');
 
 const helpmsg = new Discord.MessageEmbed;
 helpmsg.title = 'Help';
-helpmsg.description = '**Main**\n!gtv help -*Shows this message*\n/demographics - Shows Demographic Information';
-//!gtv star leaderboard [page ex. 1,2,3] - *Shows a leaderboard of who has gotten the most stars*;
+helpmsg.description = '**Main**\nkevin help -*Shows this message*\n/demographics - Shows Demographic Information';
+//kevin star leaderboard [page ex. 1,2,3] - *Shows a leaderboard of who has gotten the most stars*;
 
 bot.on("ready", async () => {
     checkfornewpost();
@@ -157,7 +157,7 @@ bot.on("message", async (msg) => {
             return;
         }
         fs.writeFileSync('./data/suggestiondata.json',JSON.stringify(settings));
-    } else if (args[0] == "!gtv") {
+    } else if (args[0] == "kevin") {
             //if (ogargs[1] == "FTRMA") { congrats ziad
             //    const channel = bot.channels.cache.get('');
             //    channel.send(`${msg.author} has won the puzzle!`);
