@@ -22,7 +22,7 @@ client.on("message", async (msg) => {
     var args = msg.content.split(" ");
     let GTV = client.guilds.cache.get('');
     switch (args[0]) {
-        case "!gtv":
+        case "kevin":
             if (args[1] == 'svm' && msg.member.hasPermission('MANAGE_MESSAGES')) {
                 let memid = args[2];
                 memid = memid.replace('>','');
