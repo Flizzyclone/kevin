@@ -4,10 +4,18 @@
   "description": "",
   "main": "main.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node main.js",
+    "starboard": "node starboard.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Flizzyclone/kevin.git"
   },
   "author": "Flizzyclone",
-  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Flizzyclone/kevin/issues"
+  },
+  "homepage": "https://github.com/Flizzyclone/kevin#readme",
   "dependencies": {
     "data-store": "^4.0.3",
     "discord.js": "^12.4.1",
