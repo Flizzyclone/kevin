@@ -159,7 +159,7 @@ bot.on("message", async (msg) => {
             return;
         }
         fs.writeFileSync('./data/suggestiondata.json',JSON.stringify(settings));
-    } else if (args[0] == "!gtv") {
+    } else if (args[0] == "!gtv" || args[0] == "kevin") {
             //if (ogargs[1] == "FTRMA") { congrats ziad
             //    const channel = bot.channels.cache.get('');
             //    channel.send(`${msg.author} has won the puzzle!`);
