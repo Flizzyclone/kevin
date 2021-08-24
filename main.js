@@ -161,7 +161,7 @@ client.on("message", async (msg) => {
                 return;
             }
             fs.writeFileSync('./data/suggestiondata.json',JSON.stringify(settings));
-        } else if (args[0] == "!gtv" || args[0] == "kevin") {
+        } else if (args[0] == "!gtv") {
             //if (ogargs[1] == "FTRMA") { congrats ziad
             //    const channel = client.channels.cache.get('');
             //    channel.send(`${msg.author} has won the puzzle!`);
