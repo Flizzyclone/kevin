@@ -1,0 +1,27 @@
+{
+    "guildId":"",
+    "clientID":"",
+    "clientToken":"",
+    "caretakerId":"",
+    "tjId":"",
+    "birthdayBotId":"",
+    "newMemberRole":"",
+    "botAvatarLink":"",
+    "starboardEmoji":"",
+    "channels": {
+        "general":"",
+        "serverLog":"",
+        "redditPosts":"",
+        "birthday":"",
+        "commands":""
+    },
+    "reddit": {
+        "subredditName":"",
+        "credentials": {
+            "clientId":"",
+            "clientSecret":"",
+            "username":"",
+            "password":""
+        }
+    }
+}

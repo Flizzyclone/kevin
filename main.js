@@ -3,20 +3,22 @@ const fs = require('fs');
 const store = require('data-store')({ path: process.cwd() + '/data/redditpostdata.json' });
 //discord
 const Discord = require("discord.js");
-const bot = new Discord.Client;
+const client = new Discord.Client;
+
+const config = require('./config.json');
 
 //reddit
 const snoowrap = require('snoowrap');
 
 const reddit = new snoowrap({
     userAgent: 'updates a spreadsheet with the list of approved members',
-    clientId: '',
-    clientSecret: '',
-    username: '',
-    password: ''
+    clientId: config.reddit.credentials.clientId,
+    clientSecret: config.reddit.credentials.clientSecret,
+    username: config.reddit.credentials.username,
+    password: config.reddit.credentials.password
 });
 
-const gtvsub = reddit.getSubreddit('');
+const gtvsub = reddit.getSubreddit(config.reddit.subredditName);
 
 const suggestions = require('./suggestions');
 
@@ -25,143 +27,143 @@ helpmsg.title = 'Help';
 helpmsg.description = '**Main**\n!gtv help -*Shows this message*\n/demographics - Shows Demographic Information';
 //!gtv star leaderboard [page ex. 1,2,3] - *Shows a leaderboard of who has gotten the most stars*;
 
-bot.on("ready", async () => {
+client.on("ready", async () => {
     checkfornewpost();
-    console.log(`Logged in as ${bot.user.tag}!`);
+    console.log(`Logged in as ${client.user.tag}!`);
     setInterval(function tick() {
         checkfornewpost();
     }, 60000);
 });
 
-bot.on("guildMemberAdd", async (member) => {
-    if (member.guild.id == '') {
-        let channel = bot.channels.cache.get('');
-        let msg = await channel.send(`Welcome to the server ${member.user.tag}!`);
-        msg.react('👋');
+client.on("guildMemberAdd", async (member) => {
+    if (member.guild.id == config.guildId) {
+        let channel = client.channels.cache.get(config.channels.serverLog);
+        channel.send(`Welcome to the server ${member.user.tag}!`)
+            .then(msg => msg.react('👋'));
     }
-})
+});
 
-bot.on("guildMemberRemove", async (member) => {
-    if (member.guild.id == '') {
-        bot.api.channels('').messages.post({
+client.on("guildMemberRemove", async (member) => {
+    if (member.guild.id == config.guildId) {
+        client.api.channels(config.channels.serverLog).messages.post({
             data: {
                 content:`${member.user.tag} just left the server 🙁`
             }
         });
     }
-})
+});
 
-bot.on("message", async (msg) => {
+client.on("message", async (msg) => {
     // Birthday Message
-    if (msg.author.id != '') {
-        if (msg.author.id == 'MEE6 ID' && msg.channel.id == '') {
-            let general = await bot.channels.cache.get('');
-            let mess = await general.send(msg.content);
-            mess.react('🎂');
+    if (msg.author.id != config.clientID) {
+        if (msg.author.id == config.birthdayBotId && msg.channel.id == config.channels.birthday) {
+            let general = await client.channels.cache.get(config.channels.general);
+            general.send(msg.content)
+                .then(msg => msg.react('🎂'));
         };
-    // DM (Direct Message) Handling
-    if (msg.channel.type == 'dm' && msg.author.id !== '') {
-        let GTV = await bot.guilds.fetch('');
-        if (GTV.member(msg.author).roles.cache.has('') == false) {
-            let date = new Date();
-            let datestring = date.toLocaleString('en-GB', { timeZone: 'UTC' });
-            content = msg.content;
-            if (msg.attachments.array().length > 0) {
-                let attachments = msg.attachments.array();
-                for (i=0; i < attachments.length; i++) {
-                    content = content + '\n' + attachments[i].url.toString();
-                } 
-            }
-            let logchannel = await bot.channels.cache.get('');
-            let logmsg = `DM From ${msg.author} at ${datestring}:\n${Discord.Util.removeMentions(content)}`;
-            logchannel.send(logmsg);
-        }
-    }
-    let ogargs = msg.content.split(" ");
-    var args = msg.content.split(" ");
-    for (i=0; i < args.length; i++) {
-        args[i] = args[i].toLowerCase();
-    }
-    //for (i=0; i < args.length; i++) { this was a funny little joke
-    //    if (args[i] == 'bill') {
-    //        msg.channel.send('BILLBILLBILLBILLBILLBILLBILLBILLBILLBILLBILLBILLBILLBILLBILLBILLBILLBILLBILLBILLBILLBILLBILLBILLBILLBILLBILLBILLBILLBILLBILL')
-    //    }
-    //}
-    for (i=0; i < args.length; i++) {
-        if (args[i][0] == 't' && args[i+1] != undefined && args[i+1][0] == 'j') {
-            let GTV = await bot.guilds.cache.get('');
-            let TJ = GTV.member(bot.users.cache.get(''));
-            TJ.setNickname(`${ogargs[i]} ${ogargs[i+1]}`,'Automated TJ Nicknaming');
-        }
-    }
-    if (args[0] == "?suggest") {
-        let settings = JSON.parse(fs.readFileSync('./data/suggestiondata.json'));
-        let channel = await bot.channels.cache.get(settings.suggestionschannel);
-        let returnMsg = await suggestions.newSuggestion(msg, channel);
-        msg.channel.send(returnMsg.message);
-        returnMsg.suggestionMsg.react('');
-        returnMsg.suggestionMsg.react('');
-        returnMsg.suggestionMsg.react('');
-    } else if (args[0] == "?deletesuggestion") {
-        if (args[1] == '0') {
-            msg.channel.send('Reserved Suggestion Number.');
-        }
-        let settings = JSON.parse(fs.readFileSync('./data/suggestiondata.json'));
-        let suggestionChannel = await bot.channels.cache.get(settings.suggestionschannel);
-        let response = await suggestions.deleteSuggestion(args[1],msg.author.id);
-        if (response.status == false) {
-            msg.channel.send(response.error);
-        } else {
-            let message = await suggestionChannel.messages.fetch(response.message_id);
-            message.delete();
-            msg.channel.send(`Suggestion #${response.id} deleted. It read ` + '`' + Discord.Util.removeMentions(response.desc) + '`.');
-        }
-    } else if (args[0] == "?suggestionchannel") { 
-        let settings = JSON.parse(fs.readFileSync('./data/suggestiondata.json'));
-        let admin = false;
-        try {
-            admin = msg.member.hasPermission('ADMINISTRATOR');
-        } catch (e) {
-            msg.channel.send(`Must do this command in server where suggestions is enabled!`);
-            return;
-        }
-        if (admin == true) {
-            if (args[1] == null) {
-                msg.channel.send('Please send a channel to change suggestions to.');
-            } else {
-                let channelid = args[1];
-                channelid = channelid.replace('>','');
-                channelid = channelid.replace('#','');
-                channelid = channelid.replace('<','');
-                try {
-                    console.log(settings.suggestionChannel);
-                    let oldchannel = await bot.channels.cache.get(settings.suggestionschannel);
-                    starchannel = await bot.channels.cache.get(channelid);
-                    const webhooks = await oldchannel.fetchWebhooks();
-		            const webhook = webhooks.first();
-                    await webhook.edit({
-                        name:msg.author.username,
-                        avatar:msg.author.avatarURL(),
-                        channel: channelid
-                    });
-                    settings.suggestionschannel = channelid;
-                    fs.writeFileSync('./data/suggestiondata.json', JSON.stringify(settings));
-                    msg.channel.send(`Suggestions channel set to ${starchannel}!`);
-                    return;
-                } catch(e) {
-                    console.error(e);
-                    msg.channel.send('`' + e + '`');
-                    return;
+        // DM (Direct Message) Handling
+        if (msg.channel.type == 'dm' && msg.author.id !== config.clientID) {
+            let GTV = await client.guilds.fetch(config.guildId);
+            if (GTV.member(msg.author).roles.cache.has(config.newMemberRole) == false) {
+                let date = new Date();
+                let datestring = date.toLocaleString('en-GB', { timeZone: 'UTC' });
+                content = msg.content;
+                if (msg.attachments.array().length > 0) {
+                    let attachments = msg.attachments.array();
+                    for (i=0; i < attachments.length; i++) {
+                        content = content + '\n' + attachments[i].url.toString();
+                    } 
                 }
+                let logchannel = await client.channels.cache.get(config.channels.commands);
+                let logmsg = `DM From ${msg.author} at ${datestring}:\n${Discord.Util.removeMentions(content)}`;
+                logchannel.send(logmsg);
             }
-        } else {
-            msg.channel.send(`You are not an admin, you can't do that`);
-            return;
         }
-        fs.writeFileSync('./data/suggestiondata.json',JSON.stringify(settings));
-    } else if (args[0] == "!gtv" || args[0] == "kevin") {
+        let ogargs = msg.content.split(" ");
+        var args = msg.content.split(" ");
+        for (i=0; i < args.length; i++) {
+            args[i] = args[i].toLowerCase();
+        }
+        //for (i=0; i < args.length; i++) { this was a funny little joke
+        //    if (args[i] == 'bill') {
+        //        msg.channel.send('BILLBILLBILLBILLBILLBILLBILLBILLBILLBILLBILLBILLBILLBILLBILLBILLBILLBILLBILLBILLBILLBILLBILLBILLBILLBILLBILLBILLBILLBILLBILL')
+        //    }
+        //}
+        for (i=0; i < args.length; i++) {
+            if (args[i][0] == 't' && args[i+1] != undefined && args[i+1][0] == 'j') {
+                let GTV = await client.guilds.cache.get(config.guildId);
+                let TJ = GTV.member(client.users.cache.get(config.tjId));
+                TJ.setNickname(`${ogargs[i]} ${ogargs[i+1]}`,'Automated TJ Nicknaming');
+            }
+        }
+        if (args[0] == "?suggest") {
+            let settings = JSON.parse(fs.readFileSync('./data/suggestiondata.json'));
+            let channel = await client.channels.cache.get(settings.suggestionschannel);
+            let returnMsg = await suggestions.newSuggestion(msg, channel);
+            msg.channel.send(returnMsg.message);
+            returnMsg.suggestionMsg.react('');
+            returnMsg.suggestionMsg.react('');
+            returnMsg.suggestionMsg.react('');
+        } else if (args[0] == "?deletesuggestion") {
+            if (args[1] == '0') {
+                msg.channel.send('Reserved Suggestion Number.');
+            }
+            let settings = JSON.parse(fs.readFileSync('./data/suggestiondata.json'));
+            let suggestionChannel = await client.channels.cache.get(settings.suggestionschannel);
+            let response = await suggestions.deleteSuggestion(args[1],msg.author.id);
+            if (response.status == false) {
+                msg.channel.send(response.error);
+            } else {
+                let message = await suggestionChannel.messages.fetch(response.message_id);
+                message.delete();
+                msg.channel.send(`Suggestion #${response.id} deleted. It read ` + '`' + Discord.Util.removeMentions(response.desc) + '`.');
+            }
+        } else if (args[0] == "?suggestionchannel") { 
+            let settings = JSON.parse(fs.readFileSync('./data/suggestiondata.json'));
+            let admin = false;
+            try {
+                admin = msg.member.hasPermission('ADMINISTRATOR');
+            } catch (e) {
+                msg.channel.send(`Must do this command in server where suggestions is enabled!`);
+                return;
+            }
+            if (admin == true) {
+                if (args[1] == null) {
+                    msg.channel.send('Please send a channel to change suggestions to.');
+                } else {
+                    let channelid = args[1];
+                    channelid = channelid.replace('>','');
+                    channelid = channelid.replace('#','');
+                    channelid = channelid.replace('<','');
+                    try {
+                        console.log(settings.suggestionChannel);
+                        let oldchannel = await client.channels.cache.get(settings.suggestionschannel);
+                        starchannel = await client.channels.cache.get(channelid);
+                        const webhooks = await oldchannel.fetchWebhooks();
+		                const webhook = webhooks.first();
+                        await webhook.edit({
+                            name:msg.author.username,
+                            avatar:msg.author.avatarURL(),
+                            channel: channelid
+                        });
+                        settings.suggestionschannel = channelid;
+                        fs.writeFileSync('./data/suggestiondata.json', JSON.stringify(settings));
+                        msg.channel.send(`Suggestions channel set to ${starchannel}!`);
+                        return;
+                    } catch(e) {
+                        console.error(e);
+                        msg.channel.send('`' + e + '`');
+                        return;
+                    }
+                }
+            } else {
+                msg.channel.send(`You are not an admin, you can't do that`);
+                return;
+            }
+            fs.writeFileSync('./data/suggestiondata.json',JSON.stringify(settings));
+        } else if (args[0] == "!gtv" || args[0] == "kevin") {
             //if (ogargs[1] == "FTRMA") { congrats ziad
-            //    const channel = bot.channels.cache.get('');
+            //    const channel = client.channels.cache.get('');
             //    channel.send(`${msg.author} has won the puzzle!`);
             //};
             if (args[1] == 'dm' && msg.member.hasPermission('MANAGE_MESSAGES')) {
@@ -170,7 +172,7 @@ bot.on("message", async (msg) => {
                 memid = memid.replace('>','');
                 memid = memid.replace('!','');
                 memid = memid.replace('<@','');
-                let member = bot.users.cache.get(memid);
+                let member = client.users.cache.get(memid);
                 let dm;
                 try {
                     dm = await member.createDM();
@@ -207,7 +209,7 @@ bot.on("message", async (msg) => {
                 memid = memid.replace('<#','');
                 let channel;
                 try {
-                    channel = bot.channels.cache.get(memid);
+                    channel = client.channels.cache.get(memid);
                   } catch (error) {
                     console.error('cant create dm with user, someone mess up syntax????');
                     msg.channel.send("Can't find channel");
@@ -240,14 +242,14 @@ bot.on("message", async (msg) => {
             if (args[1] == 'demographics') {
                 msg.channel.send('Demographics has been moved to a slash command! Type /demographics');
             }
-    } else if (args[0] == "!shutdown") {
-        msg.channel.send('No.');
+        } else if (args[0] == "!shutdown") {
+            msg.channel.send('No.');
+        }
     }
-}
 });
 
 async function embed(msg, args) {
-    const filter = (msg) => msg.author.id != '';
+    const filter = (msg) => msg.author.id != config.clientID;
     let embed = new Discord.MessageEmbed;
     let channelid = args[2];
     channelid = channelid.replace('>','');
@@ -260,7 +262,7 @@ async function embed(msg, args) {
             msg.channel.awaitMessages(filter, { max: 1})
                 .then(collected => {
                     embed.description = collected.first().content;
-                    let chann = bot.channels.cache.get(channelid);
+                    let chann = client.channels.cache.get(channelid);
                     chann.send(embed);
                     msg.channel.send('Embed Sent!');
                 });
@@ -268,7 +270,7 @@ async function embed(msg, args) {
 }
 
 async function checkfornewpost() {
-    let channel = await bot.channels.fetch('');
+    let channel = await client.channels.fetch(config.channels.redditPosts);
     let lastcolor = store.data.lastpostcolor;
     let newcolor = await getnewcolor(lastcolor);
     gtvsub.getNew({limit: 2}).then(newpost => {
@@ -341,4 +343,4 @@ async function getnewcolor(lastcolor) {
     }
 }
 
-bot.login("");
+client.login(config.clientToken);

@@ -1,6 +1,7 @@
 const fs = require('fs');
 const Discord = require("discord.js");
 const { Sequelize } = require('sequelize');
+const config = require('./config.json');
 
 const sequelize = new Sequelize('server', 'user', 'password', {
 	host: 'localhost',
@@ -115,7 +116,7 @@ async function anonymousSuggestion(suggestion, channel) {
 		const webhook = webhooks.first();
         await webhook.edit({
             name:'Anonymous',
-            avatar:'link to bot avatar'
+            avatar:config.botAvatarLink
         });
         let num = data.numofsuggestions;
         num++;
@@ -128,7 +129,7 @@ async function anonymousSuggestion(suggestion, channel) {
         });
         await suggestionsDB.create({
             suggestion_number: num,
-            user_id: 'MYUSERID',
+            user_id: config.caretakerId,
             suggestion_desc: suggestion,
             message_id: webhookMsg.id
         }); 
@@ -149,7 +150,7 @@ async function deleteSuggestion(num, userid) {
         if(suggestionEntry == null) {
             return({status: false, error:`Could not find suggestion #${suggestion = Discord.Util.removeMentions(num)}.`});
         }
-        if (suggestionEntry.dataValues.user_id == userid || userid == 'MYUSERID') {
+        if (suggestionEntry.dataValues.user_id == userid || userid == config.caretakerId) {
             await suggestionsDB.update({ suggestion_number: 0}, { where: { suggestion_number: num }});
             return({status: true, message_id:suggestionEntry.dataValues.message_id, id:suggestionEntry.dataValues.suggestion_number, desc:suggestionEntry.dataValues.suggestion_desc});
         } else {

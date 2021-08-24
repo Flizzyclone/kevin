@@ -3,6 +3,8 @@ const fs = require('fs')
 //discord
 const Discord = require("discord.js");
 
+const config = require('./config.json');
+
 const client = new Discord.Client({
     ws: { intents: ["GUILDS","GUILD_EMOJIS","GUILD_MEMBERS","GUILD_MESSAGES","GUILD_MESSAGE_REACTIONS"] },
     partials: ['MESSAGE','REACTION']
@@ -32,10 +34,24 @@ const starDB = sequelize.define('starDB', {
     freezeTableName: true
 });
 
+const userDB = sequelize.define('userDB', {
+    user_id: {
+      type: Sequelize.STRING,
+      unique: true,
+      primaryKey: true,
+    },
+    stars: {
+      type: Sequelize.INTEGER,
+      unique: false,
+    }
+},{
+    freezeTableName: true
+});
+
 starDB.sync();
+userDB.sync();
 
 let settings = JSON.parse(fs.readFileSync('./data/starsettings.json'));
-let memberstars = JSON.parse(fs.readFileSync('./data/userstars.json'));
 
 let starboardchannelid = settings.starboardchannel;
 let starsrequired = settings.starsreq;
@@ -45,21 +61,15 @@ let blacklistedchannels = settings.blacklistedchannels;
 
 let starchannel;
 
-function getMemberI(givenid) {
-    for (var i=0; i < memberstars.members.length; i++) {
-        if (memberstars.members[i].id == givenid) return i;
-    }
-}
-
 client.on("ready", async () => {
     console.log(`Logged in as ${client.user.tag}!`);
     starchannel = client.channels.cache.get(starboardchannelid);
-    let GTV = await client.guilds.fetch('');
-    emoji = GTV.emojis.resolve('');
+    let GTV = await client.guilds.fetch(config.guildId);
+    emoji = GTV.emojis.resolve(config.starboardEmoji);
 });
 
 client.on("message", async (msg) => {
-    if (msg.author.id != '') {
+    if (msg.author.id != config.clientID) {
     var args = msg.content.split(" ");
     for (i=0; i < args.length; i++) {
         args[i] = args[i].toLowerCase();
@@ -75,7 +85,7 @@ client.on("message", async (msg) => {
                             msg.channel.send("Must do this command in a server where starboard is!");
                             return;
                         }
-                        if (admin == true || msg.author.id == 'MYUSERID') {
+                        if (admin == true || msg.author.id == config.caretakerId) {
                             let channelid = args[3];
                             channelid = channelid.replace('>','');
                             channelid = channelid.replace('#','');
@@ -105,7 +115,7 @@ client.on("message", async (msg) => {
                             msg.channel.send("Must do this command in server where starboard is!");
                             return;
                         }
-                        if (admin == true || msg.author.id == 'MYUSERID') {
+                        if (admin == true || msg.author.id == config.caretakerId) {
                             try {
                                 await msg.channel.messages.fetch(args[3]);
                                 msg.channel.send("Message cached.");
@@ -128,7 +138,7 @@ client.on("message", async (msg) => {
                             msg.channel.send("Must do this command in a server where starboard is!");
                             return;
                         }
-                        if (admin == true || msg.author.id == 'MYUSERID') {
+                        if (admin == true || msg.author.id == config.caretakerId) {
                             try {
                                 let reactionmsg = await msg.channel.messages.fetch(args[3]);
                                 let starcontentmsg = (`${emoji} ${starsrequired.toString()} | ${reactionmsg.channel}`);
@@ -174,7 +184,7 @@ client.on("message", async (msg) => {
                             msg.channel.send("Must do this command in a server where starboard is");
                             return;
                         }
-                        if (admin == true || msg.author.id == 'MYUSERID') {
+                        if (admin == true || msg.author.id == config.caretakerId) {
                             if (args[3] == '' || args[3] == undefined || args[3] == null) {
                                 if (settings.blacklistedchannels.length == 0) {
                                     msg.channel.send("There are no channels in the starboard blacklist.");
@@ -224,7 +234,7 @@ client.on("message", async (msg) => {
                             msg.channel.send("Must do this command in server where starboard is!");
                             return;
                         }
-                        if (admin == true || msg.author.id == 'MYUSERID') {
+                        if (admin == true || msg.author.id == config.caretakerId) {
                             let channelid = args[3];
                             channelid = channelid.replace('>','');
                             channelid = channelid.replace('#','');
@@ -260,7 +270,7 @@ client.on("message", async (msg) => {
                             msg.channel.send("Must do this command in server where starboard is!");
                             return;
                         }
-                        if (admin == true || msg.author.id == 'MYUSERID') {
+                        if (admin == true || msg.author.id == config.caretakerId) {
                             if (args[3] == undefined || args[3] == null || args[3] == '') {
                                 msg.channel.send("No number given!");
                                 return;
@@ -287,12 +297,10 @@ client.on("message", async (msg) => {
                         }
                     }
                     if (args[2] == 'leaderboard') {
-                        if (true) {//if (msg.author.id == 'MYUSERID') {
+                        if (true) {
                             let embed = new Discord.MessageEmbed;
                             let page;
-                            let memberlist = memberstars.members.sort(function (a, b) {
-                                return -a.num - -b.num;
-                            });
+                            let memberlist = await userDB.findAll();
                             let pages = Math.ceil((memberlist.length / 10));
                             if (args[3] == undefined || args[3] == '' || args[3] == null) {
                                 page = 1;
@@ -308,10 +316,10 @@ client.on("message", async (msg) => {
                             for (i=start; i < (start + 10); i++) {
                                 if (memberlist[i] != undefined && memberlist[i] != null && memberlist[i] != '') {
                                     try {
-                                        let user = await client.users.fetch(memberlist[i].id);
+                                        let user = await client.users.fetch(memberlist[i].dataValues.user_id);
                                         usernames.push(user.tag);
                                     } catch(e) {
-                                       usernames.push('User not found') ;
+                                       usernames.push('User not found');
                                     }
                                 } else {
                                     break;
@@ -321,13 +329,13 @@ client.on("message", async (msg) => {
                             let values = [];
                             let greaterthan = (usernames.length + start - 1);
                             for (i=start; i <= greaterthan; i++) {
-                                values.push(memberlist[i].num);
+                                values.push(memberlist[i].dataValues.stars);
                             }
                             //requester stars/place
                             let requesterstars;
-                            if (getMemberI(msg.author.id) != undefined) {
-                                let memberi = getMemberI(msg.author.id);
-                                requesterstars = memberstars.members[memberi].num;
+                            if (await userDB.count({where: {user_id: msg.author.id }}) != 0) {
+                                let userRow = await userDB.findByPk(msg.author.id);
+                                requesterstars = userRow.dataValues.stars;
                             } else {
                                 requesterstars = 0;
                             }
@@ -352,12 +360,9 @@ client.on("message", async (msg) => {
                             msg.channel.send('Leaderboard functionality is disabled.');
                         }
                     }
-                    if (args[2] == 'setstar' && msg.author.id == 'MYUSERID') {
+                    if (args[2] == 'setstar' && msg.author.id == config.caretakerId) {
                         try {
-                            let memberi = getMemberI(args[3]);
-                            let number = Number(args[4]);
-                            memberstars.members[memberi].num = number;
-                            fs.writeFileSync('./data/userstars.json', JSON.stringify(memberstars));
+                            memberDB.update({ stars: Number(args[4]) }, { where: { user_id: args[3] } });
                             msg.channel.send('Done');
                         } catch(e) {
                             console.log(e);
@@ -423,16 +428,11 @@ client.on("messageReactionAdd", async (reaction) => {
                                 starboard_msg: sentmessage.id,
                             }))
                             .catch(console.error);
-                        if (getMemberI(reactionmsg.author.id) != undefined) {
-                            let memberi = getMemberI(reactionmsg.author.id);
-                            memberstars.members[memberi].num = memberstars.members[memberi].num + reactioncount;
-                            fs.writeFileSync('./data/userstars.json', JSON.stringify(memberstars));
+                        if (await userDB.count({where: {user_id: reactionmsg.id }}) != 0) {
+                            let userRow = await userDB.findByPk(reactionmsg.author.id);
+                            userRow.increment('stars', { by: reactioncount });
                         } else {
-                            let newuser = new Object;
-                            newuser.id = reactionmsg.author.id;
-                            newuser.num = reactioncount;
-                            memberstars.members.push(newuser);
-                            fs.writeFileSync('./data/userstars.json', JSON.stringify(memberstars));
+                            userDB.create({ user_id: reactionmsg.author.id, stars: reactioncount})    
                         }
                     } else {
                         if (reactioncount < starsrequired) { //how have you done this
@@ -448,16 +448,11 @@ client.on("messageReactionAdd", async (reaction) => {
                             let starcontentmsg = (`${emoji} ${reactioncount} | ${reactionmsg.channel}`);
                             let starmessage = await starchannel.messages.fetch(starEntry.dataValues.starboard_msg);
                             starmessage.edit(starcontentmsg, starmessage.embeds[0]);
-                            if (getMemberI(reactionmsg.author.id) != undefined) {
-                                let memberi = getMemberI(reactionmsg.author.id);
-                                memberstars.members[memberi].num = memberstars.members[memberi].num + 1;
-                                fs.writeFileSync('./data/userstars.json', JSON.stringify(memberstars));
+                            if (await userDB.count({where: {user_id: reactionmsg.author.id }}) != 0) {
+                                let userRow = await userDB.findByPk(reactionmsg.author.id);
+                                userRow.increment('stars', { by: 1 });
                             } else {
-                                let newuser = new Object;
-                                newuser.id = reactionmsg.author.id;
-                                newuser.num = reactioncount;
-                                memberstars.members.push(newuser);
-                                fs.writeFileSync('./data/userstars.json', JSON.stringify(memberstars));
+                                userDB.create({ user_id: reactionmsg.author.id, stars: reactioncount})
                             }
                         }
                     }
@@ -494,20 +489,18 @@ client.on("messageReactionRemove", async (reaction) => {
                         let starmessage = await starchannel.messages.fetch(starEntry.dataValues.starboard_msg);
                         starmessage.delete();
                         await starDB.destroy({ where: { reaction_msg: reactionmsg.id } });
-                        if (getMemberI(reactionmsg.author.id) != undefined) {
-                            let memberi = getMemberI(reactionmsg.author.id);
-                            memberstars.members[memberi].num = memberstars.members[memberi].num - starsrequired;
-                            fs.writeFileSync('./data/userstars.json', JSON.stringify(memberstars));
+                        if (await userDB.count({where: {user_id: reactionmsg.author.id }}) != 0) {
+                            let userRow = await userDB.findByPk(reactionmsg.author.id);
+                            userRow.decrement('stars', { by: starsrequired });
                         }
                         return;
                     } else {
                         let starcontentmsg = (`${emoji} ${reactioncount} | ${reactionmsg.channel}`);
                         let starmessage = await starchannel.messages.fetch(starEntry.dataValues.starboard_msg);
                         starmessage.edit(starcontentmsg, starmessage.embeds[0]);
-                        if (getMemberI(reactionmsg.author.id) != undefined) {
-                            let memberi = getMemberI(reactionmsg.author.id);
-                            memberstars.members[memberi].num = memberstars.members[memberi].num - 1;
-                            fs.writeFileSync('./data/userstars.json', JSON.stringify(memberstars));
+                        if (await userDB.count({where: {user_id: reactionmsg.author.id }}) != 0) {
+                            let userRow = await userDB.findByPk(reactionmsg.author.id);
+                            userRow.decrement('stars', { by: 1 });
                         }
                     }
                 }
@@ -515,4 +508,4 @@ client.on("messageReactionRemove", async (reaction) => {
     }
 })
 
-client.login("");
+client.login(config.clientToken);
