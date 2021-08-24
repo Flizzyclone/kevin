@@ -300,7 +300,9 @@ client.on("message", async (msg) => {
                         if (true) {
                             let embed = new Discord.MessageEmbed;
                             let page;
-                            let memberlist = await userDB.findAll();
+                            let memberlist = await userDB.findAll({order: [
+                                ['stars', 'DESC']
+                            ],});
                             let pages = Math.ceil((memberlist.length / 10));
                             if (args[3] == undefined || args[3] == '' || args[3] == null) {
                                 page = 1;
