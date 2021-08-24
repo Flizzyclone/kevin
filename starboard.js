@@ -65,7 +65,7 @@ client.on("message", async (msg) => {
         args[i] = args[i].toLowerCase();
     }
     switch (args[0]) {
-        case "!gtv":
+        case "!gtv": case "kevin":
             if (args[1] == 'star') {
                     if (args[2] == 'channel') {
                         let admin = false;
