@@ -101,9 +101,9 @@ client.on("message", async (msg) => {
             let channel = await client.channels.cache.get(settings.suggestionschannel);
             let returnMsg = await suggestions.newSuggestion(msg, channel);
             msg.channel.send(returnMsg.message);
-            returnMsg.suggestionMsg.react('');
-            returnMsg.suggestionMsg.react('');
-            returnMsg.suggestionMsg.react('');
+            returnMsg.suggestionMsg.react(config.suggestions.yesEmoji);
+            returnMsg.suggestionMsg.react(config.suggestions.neutralEmoji);
+            returnMsg.suggestionMsg.react(config.suggestions.noEmoji);
         } else if (args[0] == "?deletesuggestion") {
             if (args[1] == '0') {
                 msg.channel.send('Reserved Suggestion Number.');

@@ -23,5 +23,10 @@
             "username":"",
             "password":""
         }
+    },
+    "suggestions": {
+        "yesEmoji":"",
+        "neutralEmoji":"",
+        "noEmoji":""
     }
 }
