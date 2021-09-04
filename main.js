@@ -55,14 +55,14 @@ client.on("guildMemberRemove", async (member) => {
 
 client.on("messageCreate", async (msg) => {
     // Birthday Message
-    if (msg.author.id != config.clientID) {
+    if (msg.author.id != config.clientId) {
         if (msg.author.id == config.birthdayBotId && msg.channel.id == config.channels.birthday) {
             let general = await client.channels.cache.get(config.channels.general);
             general.send(msg.content)
                 .then(msg => msg.react('🎂'));
         };
         // DM (Direct Message) Handling
-        if (msg.channel.type == 'dm' && msg.author.id !== config.clientID) {
+        if (msg.channel.type == 'dm' && msg.author.id !== config.clientId) {
             let GTV = await client.guilds.fetch(config.guildId);
             if (GTV.member(msg.author).roles.cache.has(config.newMemberRole) == false) {
                 let date = new Date();
@@ -249,7 +249,7 @@ client.on("messageCreate", async (msg) => {
 });
 
 async function embed(msg, args) {
-    const filter = (msg) => msg.author.id != config.clientID;
+    const filter = (msg) => msg.author.id != config.clientId;
     let embed = new Discord.MessageEmbed;
     let channelid = args[2];
     channelid = channelid.replace('>','');
