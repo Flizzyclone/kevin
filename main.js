@@ -89,13 +89,13 @@ client.on("message", async (msg) => {
         //        msg.channel.send('BILLBILLBILLBILLBILLBILLBILLBILLBILLBILLBILLBILLBILLBILLBILLBILLBILLBILLBILLBILLBILLBILLBILLBILLBILLBILLBILLBILLBILLBILLBILL')
         //    }
         //}
-        for (i=0; i < args.length; i++) {
-            if (args[i][0] == 't' && args[i+1] != undefined && args[i+1][0] == 'j') {
-                let GTV = await client.guilds.cache.get(config.guildId);
-                let TJ = GTV.member(client.users.cache.get(config.tjId));
-                TJ.setNickname(`${ogargs[i]} ${ogargs[i+1]}`,'Automated TJ Nicknaming');
-            }
-        }
+        //for (i=0; i < args.length; i++) {    Farewell, TJ
+        //    if (args[i][0] == 't' && args[i+1] != undefined && args[i+1][0] == 'j') {
+        //        let GTV = await client.guilds.cache.get(config.guildId);
+        //        let TJ = GTV.member(client.users.cache.get(config.tjId));
+        //        TJ.setNickname(`${ogargs[i]} ${ogargs[i+1]}`,'Automated TJ Nicknaming');
+        //    }
+        //}
         if (args[0] == "?suggest") {
             let settings = JSON.parse(fs.readFileSync('./data/suggestiondata.json'));
             let channel = await client.channels.cache.get(settings.suggestionschannel);
