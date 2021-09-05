@@ -6,7 +6,7 @@ const Discord = require("discord.js");
 const config = require('./config.json');
 
 const client = new Discord.Client({
-    ws: { intents: ["GUILDS","GUILD_EMOJIS","GUILD_MEMBERS","GUILD_MESSAGES","GUILD_MESSAGE_REACTIONS"] },
+    intents: ["GUILDS","GUILD_EMOJIS","GUILD_MEMBERS","GUILD_MESSAGES","GUILD_MESSAGE_REACTIONS"] ,
     partials: ['MESSAGE','REACTION']
 });
 
@@ -68,7 +68,7 @@ client.on("ready", async () => {
     emoji = GTV.emojis.resolve(config.starboardEmoji);
 });
 
-client.on("message", async (msg) => {
+client.on("messageCreate", async (msg) => {
     if (msg.author.id != config.clientID) {
     var args = msg.content.split(" ");
     for (i=0; i < args.length; i++) {
@@ -163,7 +163,7 @@ client.on("message", async (msg) => {
                                 starmessage.setTimestamp();
                                 starchannel.send({
                                     "content": starcontentmsg,
-                                    "embed": starmessage
+                                    "embeds": starmessage
                                 });
                                 return;
                             } catch(e) {
@@ -357,7 +357,7 @@ client.on("message", async (msg) => {
                                 }
                             }
                             embed.description = desc;
-                            msg.channel.send(embed);
+                            msg.channel.send({embeds:[embed]});
                         } else {
                             msg.channel.send('Leaderboard functionality is disabled.');
                         }
@@ -423,7 +423,7 @@ client.on("messageReactionAdd", async (reaction) => {
                         starmessage.setTimestamp();
                         starchannel.send({
                             "content": starcontentmsg,
-                            "embed": starmessage
+                            "embeds": starmessage
                         })
                             .then(sentmessage => starDB.create({
                                 reaction_msg: reactionmsg.id,
