@@ -53,7 +53,7 @@ client.on("guildMemberRemove", async (member) => {
     }
 });
 
-client.on("message", async (msg) => {
+client.on("messageCreate", async (msg) => {
     // Birthday Message
     if (msg.author.id != config.clientID) {
         if (msg.author.id == config.birthdayBotId && msg.channel.id == config.channels.birthday) {
@@ -255,15 +255,15 @@ async function embed(msg, args) {
     channelid = channelid.replace('>','');
     channelid = channelid.replace('<#','');
     await msg.channel.send('What do you want the embed title to be?');
-    msg.channel.awaitMessages(filter, { max: 1})
+    msg.channel.awaitMessages({filter, max: 1})
         .then(collected => {
             embed.title = collected.first().content;
             msg.channel.send('What do you want as the description?');
-            msg.channel.awaitMessages(filter, { max: 1})
+            msg.channel.awaitMessages({filter, max: 1})
                 .then(collected => {
                     embed.description = collected.first().content;
                     let chann = client.channels.cache.get(channelid);
-                    chann.send(embed);
+                    chann.send({ embeds:[embed] });
                     msg.channel.send('Embed Sent!');
                 });
         });
@@ -321,7 +321,7 @@ async function checkfornewpost() {
                 redditpostembed.description = newpost[0].selftext;
             }
             redditpostembed.setTimestamp();
-            channel.send(redditpostembed);
+            channel.send({embeds:[redditpostembed]});
         }
     });
 }
