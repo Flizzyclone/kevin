@@ -96,7 +96,7 @@ client.on("message", async (msg) => {
                 TJ.setNickname(`${ogargs[i]} ${ogargs[i+1]}`,'Automated TJ Nicknaming');
             }
         }
-        if (args[0] == "?suggest") {
+        if (args[0] == "?suggest" && msg.guild == config.guildId) {
             let settings = JSON.parse(fs.readFileSync('./data/suggestiondata.json'));
             let channel = await client.channels.cache.get(settings.suggestionschannel);
             let returnMsg = await suggestions.newSuggestion(msg, channel);
