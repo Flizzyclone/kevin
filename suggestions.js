@@ -111,7 +111,7 @@ async function newSuggestion(msg, channel) {
 
 async function anonymousSuggestion(suggestion, channel) {
     try {
-        let data = JSON.parse(fs.readFileSync('../gtv/data/suggestiondata.json'));
+        let data = JSON.parse(fs.readFileSync('../kevin/data/suggestiondata.json'));
         const webhooks = await channel.fetchWebhooks();
 		const webhook = webhooks.first();
         await webhook.edit({
