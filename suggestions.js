@@ -134,7 +134,7 @@ async function anonymousSuggestion(suggestion, channel) {
             message_id: webhookMsg.id
         }); 
         data.numofsuggestions = num;
-        fs.writeFileSync('../gtv/data/suggestiondata.json',JSON.stringify(data));
+        fs.writeFileSync('../kevin/data/suggestiondata.json',JSON.stringify(data));
         return {success: true, message: webhookMsg};
     } catch(e) {
         console.log(e);
